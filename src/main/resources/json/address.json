@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "properties": {
+    "streetName": {
+      "type": "string"
+    },
+    "streetNumber": {
+      "type": "integer"
+    },
+    "rooms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "roomName": {
+            "type": "string"
+          },
+          "roomNumber": {
+            "type": "integer"
+          }
+        },
+        "required": ["roomName", "roomNumber"]
+      }
+    }
+  }
+}

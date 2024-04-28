@@ -1,0 +1,94 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.2.4'
+	id 'io.spring.dependency-management' version '1.1.4'
+	id "org.jsonschema2pojo" version "1.2.1"
+
+}
+
+
+
+group = 'com.generic.kafka'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '17'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.kafka:spring-kafka'
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0"
+	implementation "org.projectlombok:lombok:1.18.32"
+	implementation 'com.h2database:h2'
+	implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.kafka:spring-kafka-test'
+	implementation "org.jsonschema2pojo:jsonschema2pojo-core:1.2.1"
+
+}
+
+apply plugin: 'jsonschema2pojo'
+
+
+jsonSchema2Pojo {
+	targetDirectory = file("$buildDir/generated-sources/pojo")
+	targetPackage = "com.generic.kafka.GenericProducer.pojo"
+	generateBuilders = true
+	includeAdditionalProperties = false
+	setSource(files("$projectDir/src/main/resources/json"))
+	setAnnotationStyle("none")
+}
+
+
+
+
+task addJpaAnnotations {
+	doLast {
+		// Iterate over generated files and add JPA annotations
+		fileTree(dir: "$buildDir/generated-sources/pojo", include: '**/*.java').each { generatedFile ->
+			def content = generatedFile.text
+
+			content = content.replaceAll(
+					/(?:\s*@Generated\("jsonschema2pojo"\)\s*)+/,
+					''
+			)
+
+
+			content = content.replaceAll(/private\s+(?!String|Double|Integer|Float|List<)\w+\s+(\w+)/, '@ManyToOne\n $0')
+					.replaceAll(/private\s+(String|Double|Integer|Float)\s+(\w+)/) {
+						'@Column\nprivate ' + it[1].capitalize() + ' ' + it[2]
+					}
+					.replaceAll(/private\s+List</, '@OneToMany\nprivate List<')
+
+
+			content = content.replaceFirst(
+					'public class',
+					'\n@Entity\npublic class'
+			)
+
+			content = content.replaceFirst('@Column\nprivate Integer','@Id\nprivate Integer')
+
+
+
+			content = content.replaceAll(
+					'package com.generic.kafka.GenericProducer.pojo;',
+			'package com.generic.kafka.GenericProducer.pojo;\n\nimport jakarta.persistence.Entity;\nimport jakarta.persistence.Id;\nimport jakarta.persistence.Column;\nimport jakarta.persistence.ManyToOne;\nimport jakarta.persistence.OneToMany;')
+
+
+			generatedFile.write(content)
+		}
+	}
+}
+
+
+
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
