@@ -3,8 +3,8 @@ package com.generic.jpa;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest(classes = GenericProducerApplicationTests.class)
-class GenericProducerApplicationTests {
+@SpringBootTest(classes = GenericJpaApplicationTests.class)
+class GenericJpaApplicationTests {
 
 	@Test
 	void contextLoads() {
