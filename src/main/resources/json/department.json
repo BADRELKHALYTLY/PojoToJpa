@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "departmentName": {
+      "type": "string"
+    },
+    "departmentNumber": {
+      "type": "integer"
+    },"speciality": {
+      "type": "string"
+    }
+  }
+}

@@ -33,7 +33,7 @@ apply plugin: 'jsonschema2pojo'
 
 jsonSchema2Pojo {
 	targetDirectory = file("$buildDir/generated-sources/pojo")
-	targetPackage = "com.generic.kafka.GenericProducer.pojo"
+	targetPackage = "com.generic.jpa.pojo"
 	generateBuilders = true
 	includeAdditionalProperties = false
 	setSource(files("$projectDir/src/main/resources/json"))
@@ -65,10 +65,18 @@ task addJpaAnnotations {
 			content = content.replaceFirst('@Column\nprivate Integer','@Id\nprivate Integer')
 
 			content = content.replaceAll(
-					'package com.generic.kafka.GenericProducer.pojo;',
-					'package com.generic.kafka.GenericProducer.pojo;\n\nimport jakarta.persistence.Entity;\nimport jakarta.persistence.Id;\nimport jakarta.persistence.Column;\nimport jakarta.persistence.ManyToOne;\nimport jakarta.persistence.OneToMany;')
+					'package com.generic.jpa.pojo;',
+					'package com.generic.jpa.pojo;\n\nimport jakarta.persistence.Entity;\nimport jakarta.persistence.Id;\nimport jakarta.persistence.Column;\nimport jakarta.persistence.ManyToOne;\nimport jakarta.persistence.OneToMany;')
 
 			generatedFile.write(content)
+		}
+	}
+	outputs.upToDateWhen {
+		if (project.hasProperty('rerun')) {
+			println "rerun!"
+			return true
+		} else {
+			return false
 		}
 	}
 }
@@ -78,4 +86,3 @@ compileJava.dependsOn addJpaAnnotations
 tasks.named('test') {
 	useJUnitPlatform()
 }
-

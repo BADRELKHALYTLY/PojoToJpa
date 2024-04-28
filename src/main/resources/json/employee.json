@@ -13,8 +13,27 @@
     "age": {
       "type": "number"
     },
-    "address": {
-      "$ref": "address.json"
+    "grade": {
+      "type": "string"
+    },
+    "department": {
+      "$ref": "department.json"
+    }
+    ,
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "taskName": {
+            "type": "string"
+          },
+          "taskNumber": {
+            "type": "integer"
+          }
+        },
+        "required": ["taskName", "taskNumber"]
+      }
     }
   }
 }
