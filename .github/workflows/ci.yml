@@ -1,10 +1,12 @@
 name: CI pipeline
 
 on:
+  repository_dispatch:
+    types: [ create-pull-request ]
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
