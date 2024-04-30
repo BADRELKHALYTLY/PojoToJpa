@@ -124,8 +124,6 @@ public interface ${classNameAbs}Repository  extends JpaRepository<${classNameAbs
 
 
 compileJava.dependsOn generateJavaClass
-
-
 compileJava.dependsOn addJpaAnnotations
 
 tasks.named('test') {
