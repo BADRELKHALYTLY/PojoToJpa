@@ -1,0 +1,30 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.bat]
+end_of_line = crlf
+
+[*.feature]
+indent_size = 2
+
+[*.min.{js,json,xml}]
+insert_final_newline = false
+
+[*.mustache]
+insert_final_newline = false
+
+[*.properties]
+charset = latin1
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab

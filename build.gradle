@@ -1,8 +1,8 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.2.4'
-	id 'io.spring.dependency-management' version '1.1.4'
-	id "org.jsonschema2pojo" version "1.2.1"
+    id 'java'
+    id 'org.springframework.boot' version '3.2.4'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id "org.jsonschema2pojo" version "1.2.1"
 
 }
 
@@ -10,104 +10,103 @@ group = 'com.generic.kafka'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	sourceCompatibility = '17'
+    sourceCompatibility = '17'
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.kafka:spring-kafka'
-	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0"
-	implementation "org.projectlombok:lombok:1.18.32"
-	implementation 'com.h2database:h2'
-	implementation "org.springframework.boot:spring-boot-starter-data-jpa"
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.kafka:spring-kafka-test'
-	implementation "org.jsonschema2pojo:jsonschema2pojo-core:1.2.1"
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.kafka:spring-kafka'
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0"
+    implementation "org.projectlombok:lombok:1.18.32"
+    implementation 'com.h2database:h2'
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+    implementation "org.jsonschema2pojo:jsonschema2pojo-core:1.2.1"
 }
 
 apply plugin: 'jsonschema2pojo'
 
 jsonSchema2Pojo {
-	targetDirectory = file("$buildDir/generated-sources/pojo")
-	targetPackage = "com.generic.jpa.pojo"
-	generateBuilders = true
-	includeAdditionalProperties = false
-	setSource(files("$projectDir/src/main/resources/json"))
+    targetDirectory = file("$buildDir/generated-sources/pojo")
+    targetPackage = "com.generic.jpa.pojo"
+    generateBuilders = true
+    includeAdditionalProperties = false
+    setSource(files("$projectDir/src/main/resources/json"))
 }
 
 task addJpaAnnotations {
-	dependsOn tasks.named('generateJsonSchema2Pojo')
-	doLast {
-		// Iterate over generated files and add JPA annotations
-		fileTree(dir: "$buildDir/generated-sources/pojo", include: '**/*.java').each { generatedFile ->
-			def content = generatedFile.text
+    dependsOn tasks.named('generateJsonSchema2Pojo')
+    doLast {
+        // Iterate over generated files and add JPA annotations
+        fileTree(dir: "$buildDir/generated-sources/pojo", include: '**/*.java').each { generatedFile ->
+            def content = generatedFile.text
 
-			content = content.replaceAll(
-					/(?:\s*@Generated\("jsonschema2pojo"\)\s*)+/,
-					''
-			)
+            content = content.replaceAll(
+                    /(?:\s*@Generated\("jsonschema2pojo"\)\s*)+/,
+                    ''
+            )
 
-			content = content.replaceAll(/private\s+(?!String|Double|Integer|Float|List<)\w+\s+(\w+)/, '@ManyToOne\n $0')
-					.replaceAll(/private\s+(String|Double|Integer|Float)\s+(\w+)/) {
-						'@Column\nprivate ' + it[1].capitalize() + ' ' + it[2]
-					}
-					.replaceAll(/private\s+List</, '@OneToMany\nprivate List<')
+            content = content.replaceAll(/private\s+(?!String|Double|Integer|Float|List<)\w+\s+(\w+)/, '@ManyToOne\n $0')
+                    .replaceAll(/private\s+(String|Double|Integer|Float)\s+(\w+)/) {
+                        '@Column\nprivate ' + it[1].capitalize() + ' ' + it[2]
+                    }
+                    .replaceAll(/private\s+List</, '@OneToMany\nprivate List<')
 
-			content = content.replaceFirst(
-					'public class',
-					'\n@Entity\npublic class  '
-			)
+            content = content.replaceFirst(
+                    'public class',
+                    '\n@Entity\npublic class  '
+            )
 
-			content = content.replaceFirst('@Column\nprivate Integer','@Id\nprivate Integer')
+            content = content.replaceFirst('@Column\nprivate Integer', '@Id\nprivate Integer')
 
-			content = content.replaceAll(
-					'package com.generic.jpa.pojo;',
-					'package com.generic.jpa.pojo;\n\nimport jakarta.persistence.Entity;\nimport jakarta.persistence.Id;\nimport jakarta.persistence.Column;\nimport jakarta.persistence.ManyToOne;\nimport jakarta.persistence.OneToMany;')
+            content = content.replaceAll(
+                    'package com.generic.jpa.pojo;',
+                    'package com.generic.jpa.pojo;\n\nimport jakarta.persistence.Entity;\nimport jakarta.persistence.Id;\nimport jakarta.persistence.Column;\nimport jakarta.persistence.ManyToOne;\nimport jakarta.persistence.OneToMany;')
 
-			generatedFile.write(content)
-		}
-	}
+            generatedFile.write(content)
+        }
+    }
 }
 
 tasks.named('generateJsonSchema2Pojo').configure {
-	outputs.upToDateWhen { false }
+    outputs.upToDateWhen { false }
 }
 
 
 task generateJavaClass {
 
- 	doLast {
+    doLast {
 
- 		def packageName = 'com.generic.jpa.repository'
-		def packagePath = packageName.replaceAll('\\.', '/')
-		def sourceDir = 'src/main/java'
-	   // delete "${sourceDir}/${packagePath}"
+        def packageName = 'com.generic.jpa.repository'
+        def packagePath = packageName.replaceAll('\\.', '/')
+        def sourceDir = 'src/main/java'
+        // delete "${sourceDir}/${packagePath}"
 
-		fileTree(dir: "$buildDir/generated-sources/pojo", include: '**/*.java').each { className ->
+        fileTree(dir: "$buildDir/generated-sources/pojo", include: '**/*.java').each { className ->
 
 
+            def outputFile = file("src/main/java/${packageName.replace('.', '/')}/${className.name.replaceAll('.java', '')}Repository.java")
+            def classNameAbs = className.name.substring(className.name.lastIndexOf('\\') + 1, className.name.lastIndexOf('.java'))
 
-			def outputFile = file("src/main/java/${packageName.replace('.', '/')}/${className.name.replaceAll('.java','')}Repository.java")
-			def classNameAbs =  className.name.substring(className.name.lastIndexOf('\\') + 1, className.name.lastIndexOf('.java'))
+            outputFile.parentFile.mkdirs()
 
-			outputFile.parentFile.mkdirs()
-
-			outputFile.text = """
+            outputFile.text = """
 package ${packageName};
-            
+
 import com.generic.jpa.pojo.${classNameAbs};
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ${classNameAbs}Repository  extends JpaRepository<${classNameAbs},Integer>{
-               
+
 }
         """
-		}
-	}
+        }
+    }
 }
 
 
@@ -117,5 +116,5 @@ compileJava.dependsOn generateJavaClass
 compileJava.dependsOn addJpaAnnotations
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
