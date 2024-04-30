@@ -59,7 +59,7 @@ task addJpaAnnotations {
 
 			content = content.replaceFirst(
 					'public class',
-					'\n@Entity\npublic class'
+					'\n@Entity\npublic class  '
 			)
 
 			content = content.replaceFirst('@Column\nprivate Integer','@Id\nprivate Integer')
@@ -71,15 +71,48 @@ task addJpaAnnotations {
 			generatedFile.write(content)
 		}
 	}
-	outputs.upToDateWhen {
-		if (project.hasProperty('rerun')) {
-			println "rerun!"
-			return true
-		} else {
-			return false
+}
+
+tasks.named('generateJsonSchema2Pojo').configure {
+	outputs.upToDateWhen { false }
+}
+
+
+task generateJavaClass {
+
+ 	doLast {
+
+ 		def packageName = 'com.generic.jpa.repository'
+		def packagePath = packageName.replaceAll('\\.', '/')
+		def sourceDir = 'src/main/java'
+	   // delete "${sourceDir}/${packagePath}"
+
+		fileTree(dir: "$buildDir/generated-sources/pojo", include: '**/*.java').each { className ->
+
+
+
+			def outputFile = file("src/main/java/${packageName.replace('.', '/')}/${className.name.replaceAll('.java','')}Repository.java")
+			def classNameAbs =  className.name.substring(className.name.lastIndexOf('\\') + 1, className.name.lastIndexOf('.java'))
+
+			outputFile.parentFile.mkdirs()
+
+			outputFile.text = """
+package ${packageName};
+            
+import com.generic.jpa.pojo.${classNameAbs};
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ${classNameAbs}Repository  extends JpaRepository<${classNameAbs},Integer>{
+               
+}
+        """
 		}
 	}
 }
+
+
+compileJava.dependsOn generateJavaClass
+
 
 compileJava.dependsOn addJpaAnnotations
 
