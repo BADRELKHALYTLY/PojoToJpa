@@ -1,9 +1,10 @@
 package com.generic.jpa.repository;
 
-import com.generic.jpa.pojo.Department;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import com.generic.jpa.pojo.Department;
 
 public interface DepatmentRepository extends JpaRepository<Department, Long> {
 
