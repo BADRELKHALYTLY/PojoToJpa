@@ -8,12 +8,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class ApiResponsesService {
-    public static final String BAD_REQUEST = "\"Bad Request\"";
-    public static final int HTTP_BAD_REQUEST_STATUS = 400;
-    public static final int HTTP_INTERNAL_SERVER_ERROR_STATUS = 500;
-    public static final String INTERNAL_SERVER_ERROR = "\"Internal Server Error\"";
-    public static final String DEFAULT_KEY = "default";
-    public static final String CUSTOM_RESPONSE_CONTENT = "{\"name\":\"string\",\"surname\":\"string\",\"age\":0}";
+    private static final String BAD_REQUEST = "\"Bad Request\"";
+    private static final int HTTP_BAD_REQUEST_STATUS = 400;
+    private static final int HTTP_INTERNAL_SERVER_ERROR_STATUS = 500;
+    private static final String INTERNAL_SERVER_ERROR = "\"Internal Server Error\"";
+    private static final String DEFAULT_KEY = "default";
+    private static final String CUSTOM_RESPONSE_CONTENT = "{\"name\":\"string\",\"surname\":\"string\",\"age\":0}";
 
     public static Map<String, ApiResponse> initApiResponses() {
         Map<String, ApiResponse> apiResponses = new HashMap<>();
@@ -33,5 +33,5 @@ public final class ApiResponsesService {
         return "{\"code\" : " + httpStatus + ", \"status\" : " + responseErrorMessage + ", \"Message\"" + " : " + responseErrorMessage + "}";
     }
 
-	private ApiResponsesService() {}
+    private ApiResponsesService() {}
 }
