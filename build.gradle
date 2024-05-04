@@ -27,6 +27,9 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
 	implementation "org.jsonschema2pojo:jsonschema2pojo-core:1.2.1"
+	implementation group: 'org.json', name: 'json', version: '20090211'
+
+
 }
 
 apply plugin: 'jsonschema2pojo'
@@ -41,36 +44,54 @@ jsonSchema2Pojo {
 
 task addJpaAnnotations {
 	dependsOn tasks.named('generateJsonSchema2Pojo')
+
 	doLast {
-		// Iterate over generated files and add JPA annotations
-		fileTree(dir: "$buildDir/generated-sources/pojo", include: '**/*.java').each { generatedFile ->
-			def content = generatedFile.text
-
-			content = content.replaceAll(
-					/(?:\s*@Generated\("jsonschema2pojo"\)\s*)+/,
-					''
-			)
-
-			content = content.replaceAll(/private\s+(?!String|Double|Integer|Float|List<)\w+\s+(\w+)/, '@ManyToOne\n $0')
-					.replaceAll(/private\s+(String|Double|Integer|Float)\s+(\w+)/) {
-						'@Column\nprivate ' + it[1].capitalize() + ' ' + it[2]
-					}
-					.replaceAll(/private\s+List</, '@OneToMany\nprivate List<')
-
-			content = content.replaceFirst(
-					'public class',
-					'\n@Entity\npublic class  '
-			)
-
-			content = content.replaceFirst('@Column\nprivate Integer','@Id\nprivate Integer')
-
-			content = content.replaceAll(
-					'package com.generic.jpa.pojo;',
-					'package com.generic.jpa.pojo;\n\nimport jakarta.persistence.Entity;\nimport jakarta.persistence.Id;\nimport jakarta.persistence.Column;\nimport jakarta.persistence.ManyToOne;\nimport jakarta.persistence.OneToMany;')
-
-			generatedFile.write(content)
-		}
+		addAnnotationsToGeneratedFiles()
 	}
+}
+
+def addAnnotationsToGeneratedFiles() {
+	fileTree(dir: "$buildDir/generated-sources/pojo", include: '**/*.java').each { generatedFile ->
+		def content = generatedFile.text
+		content = removeGeneratedAnnotation(content)
+		content = addManyToOneAnnotation(content)
+		content = addColumnAnnotation(content)
+		content = addOneToManyAnnotation(content)
+		content = addEntityAnnotation(content)
+		content = addIdAnnotation(content)
+		content = addImportStatements(content)
+		generatedFile.write(content)
+	}
+}
+
+def removeGeneratedAnnotation(String content) {
+	content.replaceAll(/(?:\s*@Generated\("jsonschema2pojo"\)\s*)+/, '')
+}
+
+def addManyToOneAnnotation(String content) {
+	content.replaceAll(/private\s+(?!String|Double|Integer|Float|List<)\w+\s+(\w+)/, '@ManyToOne\n $0')
+}
+
+def addColumnAnnotation(String content) {
+	content.replaceAll(/private\s+(String|Double|Integer|Float)\s+(\w+)/) {'@Column\nprivate ' + it[1].capitalize() + ' ' + it[2]}
+}
+
+def addOneToManyAnnotation(String content) {
+	content.replaceAll(/private\s+List</, '@OneToMany\nprivate List<')
+}
+
+def addEntityAnnotation(String content) {
+	content.replaceFirst('public class', '\n@Entity\npublic class  ')
+}
+
+def addIdAnnotation(String content) {
+	content.replaceFirst('@Column\nprivate Integer', '@Id\nprivate Integer')
+}
+
+def addImportStatements(String content) {
+	content.replaceAll(
+			'package com.generic.jpa.pojo;',
+			'package com.generic.jpa.pojo;\n\nimport jakarta.persistence.Entity;\nimport jakarta.persistence.Id;\nimport jakarta.persistence.Column;\nimport jakarta.persistence.ManyToOne;\nimport jakarta.persistence.OneToMany;')
 }
 
 tasks.named('generateJsonSchema2Pojo').configure {
@@ -79,31 +100,25 @@ tasks.named('generateJsonSchema2Pojo').configure {
 
 
 task generateJavaClass {
-
- 	doLast {
-
- 		def packageName = 'com.generic.jpa.repository'
+	doLast {
+		def packageName = 'com.generic.jpa.repository'
 		def packagePath = packageName.replaceAll('\\.', '/')
 		def sourceDir = 'src/main/java'
-	   // delete "${sourceDir}/${packagePath}"
 
+		// delete "${sourceDir}/${packagePath}"
 		fileTree(dir: "$buildDir/generated-sources/pojo", include: '**/*.java').each { className ->
-
-
-
-			def outputFile = file("src/main/java/${packageName.replace('.', '/')}/${className.name.replaceAll('.java','')}Repository.java")
-			def classNameAbs =  className.name.substring(className.name.lastIndexOf('\\') + 1, className.name.lastIndexOf('.java'))
-
+			def outputFile = file("src/main/java/${packageName.replace('.', '/')}/${className.name.replaceAll('.java', '')}Repository.java")
+			def classNameAbs = className.name.substring(className.name.lastIndexOf('\\') + 1, className.name.lastIndexOf('.java'))
 			outputFile.parentFile.mkdirs()
-
 			outputFile.text = """
+
 package ${packageName};
-            
+
 import com.generic.jpa.pojo.${classNameAbs};
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ${classNameAbs}Repository  extends JpaRepository<${classNameAbs},Integer>{
-               
+
 }
         """
 		}
@@ -112,8 +127,6 @@ public interface ${classNameAbs}Repository  extends JpaRepository<${classNameAbs
 
 
 compileJava.dependsOn generateJavaClass
-
-
 compileJava.dependsOn addJpaAnnotations
 
 tasks.named('test') {
